@@ -1,3 +1,3 @@
 library(shiny)
-runApp("~/Projects/wigig-demo/shiny")
+runApp("~/Desktop/wigig-demo/shiny")
 

@@ -4,23 +4,24 @@ library(ggplot2)
 library(R.utils)
 
 ui <- fluidPage(
-	theme = shinytheme("cerulean"),
+	tags$style(type="text/css", ".recalculating{ opacity: 1.0;}" ),
+        theme = shinytheme("cerulean"),
 	#shinythemes::themeSelector(),
 	fluidRow(
-		 column(6,
-                        h3("Throughput"),
-                        plotOutput("pltTput")
-			),
+                 column(6,
+                        h3("TX antenna pattern"),
+                        plotOutput("pltSector")
+                        ),
                  column(6,
                         h3("RSSI"),
                         plotOutput("pltRSSI")
                         )
 		 ),
 	fluidRow(
-		 column(6,
-			h3("TX antenna pattern"),
-			plotOutput("pltSector")
-			),
+                 column(6,
+                        h3("Throughput (MAC layer)"),
+                        plotOutput("pltTput")
+                        ),
 		 column(6,
 			h3("Ping delay"),
 			plotOutput("pltPing")
@@ -35,16 +36,16 @@ server <- function(input, output) {
 		intervalMillis = 500,
 		session = NULL, 
 		filePath = "/tmp/ping.csv", 
-		readFunc = read.csv, header=FALSE, fill=TRUE, col.names=c("ts", "rtt") #,nrows=30, skip=countLines("/tmp/ping.csv")-30
+		readFunc = read.csv, header=FALSE, fill=TRUE, col.names=c("ts", "rtt"), skip=countLines("/tmp/ping.csv")-30 
 	)
         datBf <- reactiveFileReader(
                 intervalMillis = 500,
                 session = NULL,
                 filePath = "/tmp/bf.csv",
-                readFunc = read.csv, header=FALSE, fill=TRUE, col.names=c("ts", "sector","sqi","rssi","txmcs","txtput","goodrx","goodtx")# ,nrows=30, skip=countLines("/tmp/bf.csv")-30
+                readFunc = read.csv, header=FALSE, fill=TRUE, col.names=c("ts", "sector","sqi","rssi","txmcs","txtput","goodrx","goodtx"), skip=countLines("/tmp/bf.csv")-30
         )
 	output$pltTput<-renderPlot({
-		g <- ggplot(datBf(), aes(x=ts)) + theme_minimal()
+		g <- ggplot(datBf(), aes(x=ts)) + theme_minimal(base_size=22)
 		g <- g + geom_line(aes(y=goodtx), linetype="solid", colour="blue") + geom_point(aes(y=goodtx), colour="blue") 
 		g <- g + geom_line(aes(y=goodrx), linetype="solid", colour="darkred") + geom_point(aes(y=goodrx), colour="darkred")
                 g <- g + geom_line(aes(y=txtput), linetype="dashed", colour="blue") + geom_point(aes(y=txtput), colour="blue")          
@@ -58,8 +59,8 @@ server <- function(input, output) {
 	)
         output$pltRSSI<-renderPlot({
                 g <- ggplot(datBf(), aes(x=ts, y=rssi))
-                g <- g + geom_point(colour="darkgreen") + geom_line(colour="darkgreen") + theme_minimal()
-                g <- g + scale_y_continuous("RSSI (dBM)")
+                g <- g + geom_point(colour="darkgreen") + geom_line(colour="darkgreen") + theme_minimal(base_size=22)
+                g <- g + scale_y_continuous("RSSI (dBm)")
                 g <- g + scale_x_continuous("Time",
                                             limits=c(as.numeric(Sys.time())-10,
                                                      as.numeric(Sys.time()))
@@ -69,7 +70,7 @@ server <- function(input, output) {
         )
         output$pltPing<-renderPlot({
                 g <- ggplot(datPing(), aes(x=ts, y=rtt)) 
-                g <- g + geom_point(colour="purple") + geom_line(colour="purple") + theme_minimal()
+                g <- g + geom_point(colour="purple") + geom_line(colour="purple") + theme_minimal(base_size=22)
                 g <- g + scale_y_continuous("Round trip time (ms)")
                 g <- g + scale_x_continuous("Time", 
                                             limits=c(as.numeric(Sys.time())-10,
@@ -82,8 +83,8 @@ server <- function(input, output) {
 		sector <- as.numeric(tail(datBf()$sector, 1))
 		list(src = paste("www/sector-", sector, ".png", sep=""),
 		     	filetype = "image/png",
-			width="100%",
-			alt = paste("sector-", 2, ".png", sep="")
+			width="70%",
+			alt =paste("Missing image for sector ", sector, sep="")
 		)
 	}, deleteFile = FALSE)
 }
