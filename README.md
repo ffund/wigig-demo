@@ -45,6 +45,21 @@ iperf3 -s -i 5
 
 On wigig-2 (client), you will run four applications - open a `terminator` window and split it into four parts, then `cd` to `~/Desktop/wigig-demo` in each.
 
+Some additional setup is required on the client to access the `debugfs` to get the BF sector. On the client, run
+
+```
+sudo sysctl -w kernel.sysrq=1
+```
+
+Then press Alt+SysRq+x. In the system log (`sudo tail --lines=10 /var/log/syslog`), you should see
+
+```
+sysrq: SysRq: Disabling Secure Boot restrictions
+Lifting lockdown
+```
+
+Now we are ready to start collecting data.
+
 To get `ping` with timestamp and in nice format:
 
 ```
@@ -53,10 +68,17 @@ sudo ping -i 0.25 192.168.0.1 | while read line; do echo `date +%s.%N` $line | a
 
 ```
 
-To get `wil6210` data (substitute correct PHY name):
+or, if the last column says `ms`, use this alternative:
 
 ```
-while true; do sudo ./parse-bf.sh /sys/kernel/debug/ieee80211/phy2/wil6210/bf ; sleep 0.25; done  | tee /tmp/bf.csv
+sudo ping -i 0.25 192.168.0.1 | while read line; do echo `date +%s.%N` $line | awk -F '[ =]' '{print $1","$11}'; done | tee /tmp/ping.csv
+```
+
+To get `wil6210` data, first find the path to the `bf` file - it will be different each time the NIC is reset, because the PHY name is different. Then run a loop to get the data:
+
+```
+BFNAME=$(sudo find /sys/kernel/debug/ieee80211/ -maxdepth 3 -name "bf")
+while true; do sudo ./parse-bf.sh $BFNAME ; sleep 0.25; done  | tee /tmp/bf.csv
 ```
 
 Also generate a flow with `iperf3`:
