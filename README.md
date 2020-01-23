@@ -94,6 +94,6 @@ Finally, start the visualization:
 Rscript run-shiny-app.R
 ```
 
-After it starts, it will give you a URL which you should open a browser to see the visualization.
+After it starts, it will give you a URL which you should open in a browser to see the visualization.
 
 Anytime the axes get a little messed up, stop the `Rscript` process and run it again.
